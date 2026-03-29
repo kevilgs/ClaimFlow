@@ -7,7 +7,7 @@ const getRule = async (req, res) => {
         const { targetUserId } = req.params;
         const [rule] = await db.select().from(approvalRules).where(eq(approvalRules.target_user_id, Number(targetUserId))).limit(1);
         if (!rule) {
-            return res.status(200).json(null); // Return null gracefully
+            return res.status(200).json(null);
         }
         const approvers = await db.select().from(approvalRuleApprovers).where(eq(approvalRuleApprovers.approval_rule_id, rule.id));
         res.status(200).json({ rule, approvers });
@@ -25,7 +25,6 @@ const createOrUpdateRule = async (req, res) => {
             return res.status(400).json({ error: "Missing Target User ID" });
         }
 
-        // Delete any existing rules for this target user to purely reset
         const existingRules = await db.select().from(approvalRules).where(eq(approvalRules.target_user_id, Number(target_user_id)));
         for (const rule of existingRules) {
             await db.delete(approvalRuleApprovers).where(eq(approvalRuleApprovers.approval_rule_id, rule.id));
