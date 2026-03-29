@@ -154,36 +154,51 @@ export default function EmployeeDashboard() {
 
         try {
             const token = localStorage.getItem("token");
+            // Always create as draft first
             const res = await fetch('http://localhost:3000/api/expenses', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`
                 },
-                body: JSON.stringify({ ...formData, status })
+                body: JSON.stringify({ ...formData, status: 'draft' })
             });
 
-            if (res.ok) {
-                if (status === "draft") {
-                    toast.success("Saved as draft!");
-                } else {
-                    toast.success("Expense submitted for approval!");
-                }
-                setIsModalOpen(false);
-                setFormData({
-                    description: "",
-                    date: "",
-                    category: "",
-                    currency: "USD",
-                    amount: 0,
-                    remarks: "",
-                });
-                setPreviewUrl(null);
-                fetchExpenses();
-            } else {
-                const json = await res.json();
-                toast.error(json.error || "Failed to save expense.");
+            if (!res.ok) {
+                toast.error("Failed to create expense.");
+                return;
             }
+
+            const created = await res.json();
+
+            if (status === "submitted") {
+                // Now trigger the submit endpoint which builds the approval queue
+                const submitRes = await fetch(`http://localhost:3000/api/expenses/${created.id}/submit`, {
+                    method: "PATCH",
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (submitRes.ok) {
+                    toast.success("Expense submitted for approval!");
+                } else {
+                    const json = await submitRes.json();
+                    toast.error(json.error || "Failed to submit for approval.");
+                    return;
+                }
+            } else {
+                toast.success("Saved as draft!");
+            }
+
+            setIsModalOpen(false);
+            setFormData({
+                description: "",
+                date: "",
+                category: "",
+                currency: "USD",
+                amount: 0,
+                remarks: "",
+            });
+            setPreviewUrl(null);
+            fetchExpenses();
         } catch (error) {
             toast.error("An error occurred while saving the expense.");
         }
@@ -197,6 +212,8 @@ export default function EmployeeDashboard() {
             case "submitted":
             case "pending_approval":
                 return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200 border-none">Pending</Badge>;
+            case "rejected":
+                return <Badge className="bg-red-100 text-red-800 hover:bg-red-200 border-none">Rejected</Badge>;
             case "draft":
                 return <Badge className="bg-slate-100 text-slate-800 hover:bg-slate-200 border-none">Draft</Badge>;
             default:
@@ -214,6 +231,7 @@ export default function EmployeeDashboard() {
     const draftTotal = calculateTotal(['draft']);
     const pendingTotal = calculateTotal(['submitted', 'pending_approval']);
     const approvedTotal = calculateTotal(['approved', 'reimbursed']);
+    const rejectedTotal = calculateTotal(['rejected']);
 
     return (
         <div className="space-y-6">
@@ -228,25 +246,32 @@ export default function EmployeeDashboard() {
             {/* Metric Banner */}
             <Card className="border-slate-200 shadow-sm overflow-hidden bg-white">
                 <CardContent className="p-0">
-                    <div className="grid grid-cols-1 md:grid-cols-3 md:divide-x divide-y md:divide-y-0 divide-slate-200">
+                    <div className="grid grid-cols-1 md:grid-cols-4 md:divide-x divide-y md:divide-y-0 divide-slate-200">
                         <div className="flex items-center justify-between p-6 bg-slate-50/50">
                             <div className="space-y-1">
                                 <p className="text-sm font-medium text-slate-500">To Submit</p>
                                 <p className="text-2xl font-bold text-slate-900">${draftTotal}</p>
                             </div>
-                            <ArrowRight className="h-6 w-6 text-slate-300 hidden md:block" />
+                            <ArrowRight className="h-5 w-5 text-slate-300 hidden md:block" />
                         </div>
                         <div className="flex items-center justify-between p-6">
                             <div className="space-y-1">
                                 <p className="text-sm font-medium text-slate-500">Waiting Approval</p>
                                 <p className="text-2xl font-bold text-amber-600">${pendingTotal}</p>
                             </div>
-                            <ArrowRight className="h-6 w-6 text-slate-300 hidden md:block" />
+                            <ArrowRight className="h-5 w-5 text-slate-300 hidden md:block" />
                         </div>
                         <div className="flex items-center justify-between p-6">
                             <div className="space-y-1">
                                 <p className="text-sm font-medium text-slate-500">Approved</p>
                                 <p className="text-2xl font-bold text-green-600">${approvedTotal}</p>
+                            </div>
+                            <ArrowRight className="h-5 w-5 text-slate-300 hidden md:block" />
+                        </div>
+                        <div className="flex items-center justify-between p-6 bg-red-50/30">
+                            <div className="space-y-1">
+                                <p className="text-sm font-medium text-slate-500">Rejected</p>
+                                <p className="text-2xl font-bold text-red-600">${rejectedTotal}</p>
                             </div>
                         </div>
                     </div>

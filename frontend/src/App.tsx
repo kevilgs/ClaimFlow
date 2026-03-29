@@ -8,6 +8,8 @@ import ApprovalRules from "./pages/ApprovalRules"
 import AllExpenses from "./pages/AllExpenses"
 import EmployeeLayout from "./components/layout/EmployeeLayout"
 import EmployeeDashboard from "./pages/EmployeeDashboard"
+import ManagerLayout from "./components/layout/ManagerLayout"
+import ManagerDashboard from "./pages/ManagerDashboard"
 
 export default function App() {
   return (
@@ -22,6 +24,9 @@ export default function App() {
         </Route>
         <Route path="/employee" element={<EmployeeLayout />}>
           <Route index element={<EmployeeDashboard />} />
+        </Route>
+        <Route path="/manager" element={<ManagerLayout />}>
+          <Route index element={<ManagerDashboard />} />
         </Route>
         {/* If someone types a random URL, send them back to login */}
         <Route path="*" element={<Navigate to="/login" />} />

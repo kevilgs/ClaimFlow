@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Plus, Trash2, Users, Check, ChevronsUpDown, ShieldCheck } from "lucide-react";
 
@@ -63,6 +63,7 @@ interface RuleForm {
 
 export default function ApprovalRules() {
     const location = useLocation();
+    const navigate = useNavigate();
     const [allUsers, setAllUsers] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -149,11 +150,85 @@ export default function ApprovalRules() {
         }));
     };
 
-    const handleSave = () => {
-        console.log("Saving Rule:", JSON.stringify(ruleForm, null, 2));
-        toast.success("Approval Rule Saved!", {
-            description: "The engine configuration has been updated successfully.",
-        });
+    useEffect(() => {
+        const fetchExistingRule = async () => {
+            if (!ruleForm.targetUserId) return;
+            try {
+                const token = localStorage.getItem("token");
+                const res = await fetch(`http://localhost:3000/api/approval-rules/${ruleForm.targetUserId}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.rule) {
+                        setRuleForm(prev => ({
+                            ...prev,
+                            description: data.rule.description || "",
+                            isManagerApprover: data.rule.is_manager_approver,
+                            isSequential: data.rule.is_sequential,
+                            minApprovalPercentage: data.rule.min_approval_percentage,
+                            approverRows: data.approvers ? data.approvers.map((a: any) => ({
+                                tempId: crypto.randomUUID(),
+                                userId: String(a.user_id),
+                                isRequired: a.is_required
+                            })) : []
+                        }));
+                    } else {
+                        // Reset defaults if no existing rule mapping
+                        setRuleForm(prev => ({
+                            ...prev,
+                            description: "",
+                            isManagerApprover: false,
+                            isSequential: false,
+                            minApprovalPercentage: 100,
+                            approverRows: []
+                        }));
+                    }
+                }
+            } catch (err) { }
+        };
+        fetchExistingRule();
+    }, [ruleForm.targetUserId]);
+
+    const handleSave = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const payload = {
+                target_user_id: ruleForm.targetUserId,
+                description: ruleForm.description,
+                manager_id: ruleForm.managerOverrideId,
+                is_manager_approver: ruleForm.isManagerApprover,
+                is_sequential: ruleForm.isSequential,
+                min_approval_percentage: ruleForm.minApprovalPercentage,
+                approvers: ruleForm.approverRows.map((r, index) => ({
+                    user_id: r.userId,
+                    sequence_order: index + 1,
+                    is_required: r.isRequired
+                }))
+            };
+
+            const res = await fetch("http://localhost:3000/api/approval-rules", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                toast.success("Approval Rule Saved!", {
+                    description: "The engine configuration has been updated successfully.",
+                });
+                setTimeout(() => {
+                    navigate("/admin");
+                }, 1000);
+            } else {
+                toast.error("Failed to process saving logic.");
+            }
+        } catch (err) {
+            toast.error("Internal server error when saving rule.");
+        }
     };
 
     const UserCombobox = ({
