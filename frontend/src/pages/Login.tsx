@@ -28,8 +28,14 @@ export default function Login() {
       if (!response.ok) throw new Error(data.error || "Something went wrong")
 
       localStorage.setItem("token", data.token)
-      navigate("/")
-      
+      localStorage.setItem("user", JSON.stringify(data.user))
+
+      if (data.user.role === "admin") {
+        navigate("/admin")
+      } else {
+        navigate("/employee")
+      }
+
     } catch (err: any) {
       setError(err.message)
     } finally {
