@@ -3,6 +3,8 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
+const ocrRoutes = require('./routes/ocrRoutes');
+const expenseRoutes = require('./routes/expenseRoutes');
 
 dotenv.config();
 
@@ -19,6 +21,8 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/ocr', ocrRoutes);
+app.use('/api/expenses', expenseRoutes);
 
 
 app.listen(PORT, () => {
