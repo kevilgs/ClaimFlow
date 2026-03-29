@@ -2,6 +2,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import Login from "./pages/Login"
 import Signup from "./pages/Signup"
+import ResetPassword from "./pages/ResetPassword"
 import AdminLayout from "./components/layout/AdminLayout"
 import TeamDirectory from "./pages/TeamDirectory"
 import ApprovalRules from "./pages/ApprovalRules"
@@ -17,6 +18,7 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<TeamDirectory />} />
           <Route path="rules" element={<ApprovalRules />} />

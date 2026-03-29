@@ -20,14 +20,7 @@ export function AuthShell({ heading, subheading, footerText, footerLink, childre
                 <p className="text-sm text-slate-600">Expense & Approval Workspace</p>
               </div>
             </div>
-            <div className="mt-6 space-y-3 text-slate-700">
-              <p className="text-base font-medium">Aligned teams, faster reimbursements.</p>
-              <p className="text-sm text-slate-600">Track requests, approvals, and payouts in one calm, reliable place.</p>
-              <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
-                <span>Live status across offices.</span>
-              </div>
-            </div>
+            {/* Descriptive text removed by user request */}
           </div>
         </div>
 
