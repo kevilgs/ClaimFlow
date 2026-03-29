@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const { eq, and, ne } = require('drizzle-orm');
 const { db } = require('../db');
 const { users } = require('../db/schema');
+const { sendWelcomeEmail } = require('../services/emailService');
 
 const getUsers = async (req, res) => {
   try {
@@ -67,6 +68,13 @@ const createUser = async (req, res) => {
       });
 
     const user = inserted[0];
+
+    try {
+      await sendWelcomeEmail({ to: email, name, tempPassword });
+    } catch (emailErr) {
+      console.error('Welcome email failed to send:', emailErr);
+    }
+
     res.status(201).json({ user, tempPassword });
   } catch (err) {
     res.status(500).json({ error: 'Internal server error' });

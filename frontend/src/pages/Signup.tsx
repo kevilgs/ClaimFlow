@@ -15,7 +15,7 @@ export default function Signup() {
   const [countriesList, setCountriesList] = useState<{ name: string; currency: string }[]>([])
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  
+
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -63,13 +63,13 @@ export default function Signup() {
     setIsLoading(true)
 
     try {
-      const response = await fetch("http://localhost:3000/api/signup", {        
+      const response = await fetch("http://localhost:3000/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password, country: selectedCountry, base_currency: baseCurrency }),
       })
       const data = await response.json()
-      if (!response.ok) throw new Error(data.error || "Something went wrong")   
+      if (!response.ok) throw new Error(data.error || "Something went wrong")
 
       localStorage.setItem("token", data.token)
       navigate("/")

@@ -109,7 +109,7 @@ export default function AdminLayout() {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm font-medium text-slate-600 hidden sm:inline-block">
-              Hello, {userName} 👋
+              Hello, {userName}
             </span>
             <button
               onClick={handleLogout}

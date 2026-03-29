@@ -1,8 +1,10 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { eq } = require('drizzle-orm');
 const { db } = require('../db');
 const { users, companies } = require('../db/schema');
+const { sendPasswordResetEmail } = require('../services/emailService');
 
 const signup = async (req, res) => {
   try {
@@ -121,4 +123,55 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { signup, login };
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const [user] = await db.select().from(users).where(eq(users.email, normalizedEmail));
+
+    if (!user) {
+      return res.status(200).json({ message: 'If that email exists, a reset link has been sent.' });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 15 * 60 * 1000);
+
+    await db.update(users)
+      .set({ reset_token: resetToken, reset_token_expires: expires })
+      .where(eq(users.id, user.id));
+
+    await sendPasswordResetEmail({ to: normalizedEmail, resetToken });
+
+    res.status(200).json({ message: 'If that email exists, a reset link has been sent.' });
+  } catch (error) {
+    console.error('Forgot Password Error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword) return res.status(400).json({ error: 'Token and new password are required' });
+
+    const [user] = await db.select().from(users).where(eq(users.reset_token, token));
+
+    if (!user || !user.reset_token_expires || new Date() > new Date(user.reset_token_expires)) {
+      return res.status(400).json({ error: 'Reset link is invalid or has expired.' });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await db.update(users)
+      .set({ password: hashed, reset_token: null, reset_token_expires: null })
+      .where(eq(users.id, user.id));
+
+    res.status(200).json({ message: 'Password reset successfully. You can now log in.' });
+  } catch (error) {
+    console.error('Reset Password Error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+module.exports = { signup, login, forgotPassword, resetPassword };

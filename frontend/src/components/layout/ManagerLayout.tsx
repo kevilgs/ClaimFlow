@@ -27,7 +27,7 @@ export default function ManagerLayout() {
                 </div>
                 <div className="flex items-center gap-4">
                     <span className="text-sm font-medium text-slate-500 hidden sm:inline-block">
-                        Hello, {userName} 👋
+                        Hello, {userName}
                     </span>
                     <Button
                         variant="ghost"
