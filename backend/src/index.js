@@ -5,6 +5,7 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const ocrRoutes = require('./routes/ocrRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
+const approvalRuleRoutes = require('./routes/approvalRuleRoutes');
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use('/api', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/ocr', ocrRoutes);
 app.use('/api/expenses', expenseRoutes);
+app.use('/api/approval-rules', approvalRuleRoutes);
 
 
 app.listen(PORT, () => {

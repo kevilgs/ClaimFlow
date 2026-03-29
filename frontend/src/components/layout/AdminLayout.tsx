@@ -16,6 +16,10 @@ export default function AdminLayout() {
   const location = useLocation()
   const navigate = useNavigate()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [userName] = useState<string>(() => {
+    try { return JSON.parse(localStorage.getItem("user") || "{}")?.name || "Admin"; }
+    catch { return "Admin"; }
+  });
 
   useEffect(() => {
     const userStr = localStorage.getItem("user");
@@ -70,8 +74,8 @@ export default function AdminLayout() {
                       to={item.to}
                       aria-label={expanded ? undefined : item.label}
                       className={`flex items-center ${expanded ? "gap-3" : "justify-center"} rounded-md px-3 py-2 text-sm transition ${active
-                          ? "bg-slate-900 text-white font-medium"
-                          : "hover:bg-slate-100 text-slate-800"
+                        ? "bg-slate-900 text-white font-medium"
+                        : "hover:bg-slate-100 text-slate-800"
                         }`}
                     >
                       <Icon className="h-4 w-4" />
@@ -103,13 +107,18 @@ export default function AdminLayout() {
             </button>
             <div className="text-lg font-semibold text-slate-900">Admin</div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-100"
-          >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </button>
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-slate-600 hidden sm:inline-block">
+              Hello, {userName} 👋
+            </span>
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-100"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </button>
+          </div>
         </header>
         <main className="flex-1 overflow-y-auto bg-slate-50">
           <div className="p-8">
